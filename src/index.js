@@ -3,7 +3,7 @@ const {
   requestFactory,
   log,
   scrape,
-  saveFiles,
+  saveBills,
   errors
 } = require('cozy-konnector-libs')
 const request = requestFactory({
@@ -14,6 +14,8 @@ const request = requestFactory({
 })
 
 const format = require('date-fns/format')
+const pdfjs = require('pdfjs-dist')
+const stream = require('stream')
 
 const baseUrl = 'https://client.o2.fr'
 
@@ -24,15 +26,10 @@ async function start(fields) {
   await authenticate(fields.login, fields.password)
   log('info', 'Successfully logged in')
 
-  log('info', 'Fetching bills information')
-  const bills = await fetchAndParseBills()
-  log('info', 'Fetched bills information')
-
-  log('info', 'Downloading bills')
-  await saveFiles(bills, fields.folderPath)
+  await handleBills(fields)
 }
 
-async function fetchAndParseBills() {
+async function handleBills(fields) {
   let $ = await request(`${baseUrl}/factures/`)
 
   const agencyId = $('#agence_id')
@@ -82,10 +79,63 @@ async function fetchAndParseBills() {
   // add filenames
   bills = bills.map(bill => ({
     ...bill,
-    filename: `${format(bill.date, 'YYYY-MM')}_o2.pdf`
+    filename: `${format(bill.date, 'YYYY-MM')}_o2.pdf`,
+    vendor: 'O2',
+    currency: '€',
+    metadata: {
+      importDate: new Date(),
+      version: 1
+    }
   }))
 
-  return bills
+  // now parse data in pdf files and save associated bill for each bill, to avoid save all the pdf
+  // files in memory
+  for (const bill of bills) {
+    log('info', `parsing pdf file for ${bill.date} bill`)
+    await findAndAddAmount(bill)
+    log('info', `got amount ${bill.amount}`)
+    log('info', `Now saving this bill to Cozy`)
+    await saveBills([bill], fields.folderPath, {
+      identifiers: ['o2'],
+      contentType: 'application/pdf'
+    })
+  }
+}
+
+// Parse the pdf file to get the amount of the bill
+// To avoid to fetch the file twice, we also add it as filestream in the bill map
+async function findAndAddAmount(bill) {
+  const rq = requestFactory({
+    cheerio: false,
+    json: false,
+    jar: true
+  })
+  const pdfBuffer = await rq({
+    url: bill.fileurl,
+    encoding: null
+  })
+
+  const doc = await pdfjs.getDocument(new Uint8Array(pdfBuffer))
+  const page = await doc.getPage(1)
+  const textContent = await page.getTextContent()
+
+  // find the height of the cell with 'SOLDE NET' as text
+  const topSoldeNetPreleve = textContent.items.find(
+    item => item.str.indexOf('SOLDE NET') !== -1
+  ).transform[5]
+
+  // find another cell with the same height : it is the amount
+  const amount = textContent.items.find(
+    item => item.transform[5] === topSoldeNetPreleve
+  ).str
+
+  bill.amount = parseFloat(amount.replace(',', '.').replace(' €', ''))
+
+  // add the pdf stream to the bill
+  const bufferStream = new stream.PassThrough()
+  bufferStream.end(pdfBuffer)
+  bill.filestream = bufferStream
+  delete bill.fileurl
 }
 
 async function authenticate(username, password) {

@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "cozy-konnector-libs": "4.3.0",
-    "date-fns": "^1.29.0",
+    "date-fns": "1.29.0",
     "pdfjs-dist": "^2.0.489"
   },
   "devDependencies": {
