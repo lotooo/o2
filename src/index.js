@@ -13,6 +13,8 @@ const request = requestFactory({
   jar: true
 })
 
+const format = require('date-fns/format')
+
 const baseUrl = 'https://client.o2.fr'
 
 module.exports = new BaseKonnector(start)
@@ -61,15 +63,28 @@ async function fetchAndParseBills() {
             attr: 'href',
             parse: href => `${baseUrl}${href}`
           },
-          filename: {
+          date: {
             sel: 'a',
-            parse: text => `${text}.pdf`
+            attr: 'href',
+            parse: text => {
+              const json = JSON.parse(
+                text.match(/\{.*\}/)[0].replace(/'/g, '"')
+              )
+              return new Date(json.endDate)
+            }
           }
         },
         'li'
       )
     )
   }
+
+  // add filenames
+  bills = bills.map(bill => ({
+    ...bill,
+    filename: `${format(bill.date, 'YYYY-MM')}_o2.pdf`
+  }))
+
   return bills
 }
 
