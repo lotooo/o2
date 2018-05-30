@@ -16,6 +16,7 @@ const request = requestFactory({
 const format = require('date-fns/format')
 const pdfjs = require('pdfjs-dist')
 const stream = require('stream')
+const bluebird = require('bluebird')
 
 const baseUrl = 'https://client.o2.fr'
 
@@ -90,28 +91,30 @@ async function handleBills(fields) {
 
   // now parse data in pdf files and save associated bill for each bill, to avoid save all the pdf
   // files in memory
-  for (const bill of bills) {
+  bills = await bluebird.mapSeries(bills, async bill => {
     log('info', `parsing pdf file for ${bill.date} bill`)
-    await findAndAddAmount(bill)
+    const result = await findAndAddAmount(bill)
     log('info', `got amount ${bill.amount}`)
     log('info', `Now saving this bill to Cozy`)
-    await saveBills([bill], fields.folderPath, {
+    await saveBills([result], fields.folderPath, {
       identifiers: ['o2'],
       contentType: 'application/pdf'
     })
-  }
+    return result
+  })
 }
 
 // Parse the pdf file to get the amount of the bill
 // To avoid to fetch the file twice, we also add it as filestream in the bill map
 async function findAndAddAmount(bill) {
+  const result = { ...bill }
   const rq = requestFactory({
     cheerio: false,
     json: false,
     jar: true
   })
   const pdfBuffer = await rq({
-    url: bill.fileurl,
+    url: result.fileurl,
     encoding: null
   })
 
@@ -129,13 +132,14 @@ async function findAndAddAmount(bill) {
     item => item.transform[5] === topSoldeNetPreleve
   ).str
 
-  bill.amount = parseFloat(amount.replace(',', '.').replace(' €', ''))
+  result.amount = parseFloat(amount.replace(',', '.').replace(' €', ''))
 
   // add the pdf stream to the bill
   const bufferStream = new stream.PassThrough()
   bufferStream.end(pdfBuffer)
-  bill.filestream = bufferStream
-  delete bill.fileurl
+  result.filestream = bufferStream
+  delete result.fileurl
+  return result
 }
 
 async function authenticate(username, password) {
