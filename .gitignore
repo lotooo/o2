@@ -3,7 +3,7 @@
 .token.json
 konnector-dev-config.json*
 fixtures/*
-importedData.json
+data/*
 
 # NPM
 node_modules/
@@ -32,5 +32,3 @@ desktop.ini
 # Default
 # /!\ KEEP THIS SECTION THE LAST ONE
 !.gitkeep
-
-*.pdf
