@@ -5,7 +5,7 @@
   "language": "node",
   "icon": "icon.svg",
   "slug": "o2",
-  "source": "git://github.com/konnectors/o2.git",
+  "source": "git@github.com:konnectors/o2.git",
   "editor": "Cozy",
   "vendor_link": "https://client.o2.fr/connexion/",
   "categories": [
