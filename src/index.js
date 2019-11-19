@@ -85,7 +85,7 @@ async function handleBills(fields) {
   // add filenames
   bills = bills.map(bill => ({
     ...bill,
-    filename: `${format(bill.date, 'YYYY-MM')}_o2.pdf`,
+    filename: `${format(bill.date, 'yyyy-MM')}_o2.pdf`,
     vendor: 'O2',
     currency: '€',
     metadata: {
