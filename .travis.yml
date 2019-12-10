@@ -1,10 +1,8 @@
 language: node_js
 node_js:
-- '8'
+- '12'
 env:
   global:
-  - GH_USER_EMAIL="travis@example.org"
-  - GH_USER_NAME="cozy-bot"
   - DEPLOY_REPOSITORY="git@github.com:konnectors/o2.git"
   - secure: nWTR504f1ZfpCfKwTGpXrsePY/8sZvwnrpSkSjkFI00GvSxl8mZT0DZtyqA+Eqi5pFo8bGF3MwvW3Y4lVLh+0O0fuXzC0UtFF6By9HRmRUHvJBsear0N8s1yXNpmQ+Adz3WmL4mnqkEwaNihV6CU1DCJsD95GYbg1WwIuGR55XVKTqLXO48OkLURRTC1BEUwxzx/ZVnYWrGadeAtOTjHmo8st3faQM1SEdJpuYvK+hFNZxPqPdhex8fQbufqaWItYi3VTXKB9H3UeRIBuqLPQrf3QwYbK/Ay/U1SB47lOsTs3NfA1+ZrqFYUozg0BFNSyf7NsdN3FaDvVc1i7efBWFbNZorXKvWglfKdHWUTtdtO8rzquzTEDV6HoyMKi4HPfBmKL7WfZPzrrc63U8GxdeLlaUAgQxfoXIEndLQx98/Te5RLAF7RSEDoKJLPXetMErQr8yKBPDTCn/6lH6efcgbjpEzaUlQjYMff8Frf/8RyVTVV7BYeyFVyOHO/heYuK/LE8INhM8jAl2xAT5U6js8qZ2PvcCk72V4uxMcS+ukc62a6fu2Vq6sxSYdi32G91AE2QCz0itYnD27gi4c0SYRFyIkBpIOEyg+8GGO8IQwe8SDtrfZzkVlfpXNHpn+YKWOLT660YbbkK+R0G2JWegxJUu/Uw4cM2bPEcWMWY5g=
 cache:
