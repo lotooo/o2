@@ -37,7 +37,7 @@
     "travisDeployKey": "./bin/generate_travis_deploy_key"
   },
   "dependencies": {
-    "cozy-konnector-libs": "4.34.4",
+    "cozy-konnector-libs": "4.34.5",
     "date-fns": "2.14.0",
     "pdfjs-dist": "2.4.456"
   },
