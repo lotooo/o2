@@ -9,7 +9,7 @@
   "editor": "Cozy",
   "vendor_link": "https://client.o2.fr/connexion/",
   "categories": [
-    "other"
+    "others"
   ],
   "fields": {
     "login": {
