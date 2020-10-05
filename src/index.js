@@ -19,7 +19,7 @@ const request = requestFactory({
 })
 
 const format = require('date-fns/format')
-const pdfjs = require('pdfjs-dist')
+const pdfjs = require('pdfjs-dist/es5/build/pdf.js')
 const stream = require('stream')
 const bluebird = require('bluebird')
 
@@ -99,18 +99,22 @@ async function handleBills(fields) {
   bills = await bluebird.mapSeries(bills, async bill => {
     log('info', `parsing pdf file for ${bill.date} bill`)
     const result = await findAndAddAmount(bill)
-    log('info', `got amount ${bill.amount}`)
+    log('info', `got amount ${result.amount}`)
     log('info', `Now saving this bill to Cozy`)
 
     if (result.amount === null) {
       // if we could not find an amount in the PDF, we only save the file
-      await saveFiles([result], fields.folderPath, {
-        contentType: 'application/pdf'
+      await saveFiles([result], fields, {
+        contentType: 'application/pdf',
+        sourceAccount: this.accountId,
+        sourceAccountIdentifier: fields.login
       })
     } else {
-      await saveBills([result], fields.folderPath, {
+      await saveBills([result], fields, {
         identifiers: ['o2'],
-        contentType: 'application/pdf'
+        contentType: 'application/pdf',
+        sourceAccount: this.accountId,
+        sourceAccountIdentifier: fields.login
       })
     }
     return result
@@ -143,7 +147,7 @@ async function findAndAddAmount(bill) {
 }
 
 async function getAmountInPdf(pdfBuffer, date) {
-  const doc = await pdfjs.getDocument(new Uint8Array(pdfBuffer))
+  const doc = await pdfjs.getDocument(new Uint8Array(pdfBuffer)).promise
   const page = await doc.getPage(1)
   const textContent = await page.getTextContent()
 
@@ -172,7 +176,7 @@ async function getAmountInPdf(pdfBuffer, date) {
 }
 
 async function authenticate(username, password) {
-  const request = requestFactory({ cheerio: false })
+  //const request = requestFactory({ cheerio: false })
   const result = await request({
     url: `${baseUrl}/wp-admin/admin-ajax.php`,
     method: 'POST',
@@ -185,7 +189,7 @@ async function authenticate(username, password) {
 
   let json
   try {
-    json = JSON.parse(result.trim())
+    json = JSON.parse(result.text().trim())
   } catch (err) {
     log('error', 'Could not parse JSON response')
     log('error', err.message)
